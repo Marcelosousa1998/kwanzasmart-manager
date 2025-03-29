@@ -9,7 +9,8 @@ import {
   Trash2, 
   Edit 
 } from "lucide-react";
-import { useFinance, Transaction, TransactionCategory } from "@/contexts/FinanceContext";
+import { useFinance } from "@/contexts/FinanceContext";
+import { Transaction, TransactionCategory } from "@/types/finance";
 import Layout from "@/components/Layout";
 import TransactionForm from "@/components/TransactionForm";
 import CategoryIcon from "@/components/CategoryIcon";

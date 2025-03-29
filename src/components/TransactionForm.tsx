@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useFinance, TransactionCategory } from "@/contexts/FinanceContext";
+import { useFinance } from "@/contexts/FinanceContext";
+import { TransactionCategory } from "@/types/finance";
 import { getCategoryLabel, expenseCategories } from "@/utils/categoryUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

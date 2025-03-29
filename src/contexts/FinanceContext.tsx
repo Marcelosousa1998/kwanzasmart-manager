@@ -1,204 +1,24 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from "react";
+import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import * as FinanceService from "@/services/FinanceService";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-// Types
-export type TransactionCategory = 
-  | "income" 
-  | "housing" 
-  | "food" 
-  | "transportation" 
-  | "education" 
-  | "entertainment" 
-  | "utilities" 
-  | "healthcare" 
-  | "shopping" 
-  | "savings" 
-  | "debt" 
-  | "remittances"
-  | "other";
-
-export interface Transaction {
-  id: string;
-  amount: number;
-  description: string;
-  category: TransactionCategory;
-  date: string;
-  isExpense: boolean;
-}
-
-export interface Budget {
-  id: string;
-  category: TransactionCategory;
-  amount: number;
-  spent: number;
-  period: "monthly" | "weekly";
-}
-
-export interface Goal {
-  id: string;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  targetDate: string;
-}
-
-export interface Debt {
-  id: string;
-  name: string;
-  amount: number;
-  interestRate: number;
-  minimumPayment: number;
-  remainingPayments: number;
-}
-
-interface FinanceState {
-  transactions: Transaction[];
-  budgets: Budget[];
-  goals: Goal[];
-  debts: Debt[];
-  currency: string;
-  loading: boolean;
-  error: string | null;
-}
-
-type FinanceAction =
-  | { type: "SET_TRANSACTIONS"; transactions: Transaction[] }
-  | { type: "ADD_TRANSACTION"; transaction: Transaction }
-  | { type: "UPDATE_TRANSACTION"; transaction: Transaction }
-  | { type: "DELETE_TRANSACTION"; id: string }
-  | { type: "SET_BUDGETS"; budgets: Budget[] }
-  | { type: "ADD_BUDGET"; budget: Budget }
-  | { type: "UPDATE_BUDGET"; budget: Budget }
-  | { type: "DELETE_BUDGET"; id: string }
-  | { type: "SET_GOALS"; goals: Goal[] }
-  | { type: "ADD_GOAL"; goal: Goal }
-  | { type: "UPDATE_GOAL"; goal: Goal }
-  | { type: "DELETE_GOAL"; id: string }
-  | { type: "SET_DEBTS"; debts: Debt[] }
-  | { type: "ADD_DEBT"; debt: Debt }
-  | { type: "UPDATE_DEBT"; debt: Debt }
-  | { type: "DELETE_DEBT"; id: string }
-  | { type: "SET_LOADING"; loading: boolean }
-  | { type: "SET_ERROR"; error: string | null };
-
-// Initial state
-const initialState: FinanceState = {
-  transactions: [],
-  budgets: [],
-  goals: [],
-  debts: [],
-  currency: "Kz",
-  loading: false,
-  error: null,
-};
-
-const financeReducer = (state: FinanceState, action: FinanceAction): FinanceState => {
-  switch (action.type) {
-    case "SET_TRANSACTIONS":
-      return {
-        ...state,
-        transactions: action.transactions,
-      };
-    case "ADD_TRANSACTION":
-      return {
-        ...state,
-        transactions: [action.transaction, ...state.transactions],
-      };
-    case "UPDATE_TRANSACTION":
-      return {
-        ...state,
-        transactions: state.transactions.map((t) =>
-          t.id === action.transaction.id ? action.transaction : t
-        ),
-      };
-    case "DELETE_TRANSACTION":
-      return {
-        ...state,
-        transactions: state.transactions.filter((t) => t.id !== action.id),
-      };
-    case "SET_BUDGETS":
-      return {
-        ...state,
-        budgets: action.budgets,
-      };
-    case "ADD_BUDGET":
-      return {
-        ...state,
-        budgets: [...state.budgets, action.budget],
-      };
-    case "UPDATE_BUDGET":
-      return {
-        ...state,
-        budgets: state.budgets.map((b) =>
-          b.id === action.budget.id ? action.budget : b
-        ),
-      };
-    case "DELETE_BUDGET":
-      return {
-        ...state,
-        budgets: state.budgets.filter((b) => b.id !== action.id),
-      };
-    case "SET_GOALS":
-      return {
-        ...state,
-        goals: action.goals,
-      };
-    case "ADD_GOAL":
-      return {
-        ...state,
-        goals: [...state.goals, action.goal],
-      };
-    case "UPDATE_GOAL":
-      return {
-        ...state,
-        goals: state.goals.map((g) =>
-          g.id === action.goal.id ? action.goal : g
-        ),
-      };
-    case "DELETE_GOAL":
-      return {
-        ...state,
-        goals: state.goals.filter((g) => g.id !== action.id),
-      };
-    case "SET_DEBTS":
-      return {
-        ...state,
-        debts: action.debts,
-      };
-    case "ADD_DEBT":
-      return {
-        ...state,
-        debts: [...state.debts, action.debt],
-      };
-    case "UPDATE_DEBT":
-      return {
-        ...state,
-        debts: state.debts.map((d) =>
-          d.id === action.debt.id ? action.debt : d
-        ),
-      };
-    case "DELETE_DEBT":
-      return {
-        ...state,
-        debts: state.debts.filter((d) => d.id !== action.id),
-      };
-    case "SET_LOADING":
-      return {
-        ...state,
-        loading: action.loading,
-      };
-    case "SET_ERROR":
-      return {
-        ...state,
-        error: action.error,
-      };
-    default:
-      return state;
-  }
-};
+import { financeReducer, initialState } from "@/reducers/financeReducer";
+import { 
+  Transaction, 
+  Budget, 
+  Goal, 
+  Debt, 
+  TransactionCategory, 
+  FinanceState,
+  FinanceAction 
+} from "@/types/finance";
+import { 
+  getTotalIncome, 
+  getTotalExpenses, 
+  getBalance, 
+  formatCurrency 
+} from "@/utils/financeUtils";
 
 // Create context
 interface FinanceContextType {
@@ -279,31 +99,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       supabase.removeChannel(channel);
     };
   }, [user]);
-
-  // Helper functions
-  const getTotalIncome = () => {
-    return state.transactions
-      .filter(t => !t.isExpense)
-      .reduce((total, t) => total + t.amount, 0);
-  };
-
-  const getTotalExpenses = () => {
-    return state.transactions
-      .filter(t => t.isExpense)
-      .reduce((total, t) => total + t.amount, 0);
-  };
-
-  const getBalance = () => {
-    return getTotalIncome() - getTotalExpenses();
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('pt-AO', {
-      style: 'currency',
-      currency: 'AOA',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   // Action creators
   const addTransaction = async (transaction: Omit<Transaction, "id">) => {
@@ -448,9 +243,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addDebt,
         updateDebt,
         deleteDebt,
-        getTotalIncome,
-        getTotalExpenses,
-        getBalance,
+        getTotalIncome: () => getTotalIncome(state.transactions),
+        getTotalExpenses: () => getTotalExpenses(state.transactions),
+        getBalance: () => getBalance(state.transactions),
         formatCurrency,
       }}
     >
@@ -466,3 +261,6 @@ export const useFinance = () => {
   }
   return context;
 };
+
+// For backward compatibility, export the types from here as well
+export type { TransactionCategory, Transaction, Budget, Goal, Debt };

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Calendar, PlusCircle, Target, Trash2, Check } from "lucide-react";
 import { useFinance } from "@/contexts/FinanceContext";

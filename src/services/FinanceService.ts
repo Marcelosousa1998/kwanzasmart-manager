@@ -1,12 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Transaction, 
-  Budget, 
-  Goal, 
-  Debt, 
-  TransactionCategory 
-} from "@/contexts/FinanceContext";
+import { Transaction, TransactionCategory } from "@/types/finance";
 
 // Funções para transações
 export const fetchTransactions = async () => {
