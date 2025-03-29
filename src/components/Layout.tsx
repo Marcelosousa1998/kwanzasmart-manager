@@ -6,11 +6,23 @@ import {
   ReceiptText, 
   PieChart, 
   Target, 
-  CircleDollarSign 
+  CircleDollarSign,
+  LogOut,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,6 +31,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
 
   const navigationItems = [
     { 
@@ -65,6 +78,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     });
   };
 
+  const handleLogout = () => {
+    signOut();
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -104,6 +121,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 <span>Sincronizar dados</span>
               </button>
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground mt-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sair</span>
+              </button>
             </div>
           </div>
         </Sidebar>
@@ -115,6 +139,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 {navigationItems.find((item) => isActive(item.path))?.name || "KwanzaSmart"}
               </h1>
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 bg-muted">
+                  <User className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </header>
           <main className="flex-1 p-6">
             {children}

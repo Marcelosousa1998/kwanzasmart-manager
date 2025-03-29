@@ -1,5 +1,8 @@
-
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
+import * as FinanceService from "@/services/FinanceService";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Types
 export type TransactionCategory = 
@@ -57,38 +60,52 @@ interface FinanceState {
   goals: Goal[];
   debts: Debt[];
   currency: string;
+  loading: boolean;
+  error: string | null;
 }
 
 type FinanceAction =
+  | { type: "SET_TRANSACTIONS"; transactions: Transaction[] }
   | { type: "ADD_TRANSACTION"; transaction: Transaction }
   | { type: "UPDATE_TRANSACTION"; transaction: Transaction }
   | { type: "DELETE_TRANSACTION"; id: string }
+  | { type: "SET_BUDGETS"; budgets: Budget[] }
   | { type: "ADD_BUDGET"; budget: Budget }
   | { type: "UPDATE_BUDGET"; budget: Budget }
   | { type: "DELETE_BUDGET"; id: string }
+  | { type: "SET_GOALS"; goals: Goal[] }
   | { type: "ADD_GOAL"; goal: Goal }
   | { type: "UPDATE_GOAL"; goal: Goal }
   | { type: "DELETE_GOAL"; id: string }
+  | { type: "SET_DEBTS"; debts: Debt[] }
   | { type: "ADD_DEBT"; debt: Debt }
   | { type: "UPDATE_DEBT"; debt: Debt }
   | { type: "DELETE_DEBT"; id: string }
-  | { type: "SET_STATE"; state: FinanceState };
+  | { type: "SET_LOADING"; loading: boolean }
+  | { type: "SET_ERROR"; error: string | null };
 
-// Initial state with sample data
+// Initial state
 const initialState: FinanceState = {
   transactions: [],
   budgets: [],
   goals: [],
   debts: [],
   currency: "Kz",
+  loading: false,
+  error: null,
 };
 
 const financeReducer = (state: FinanceState, action: FinanceAction): FinanceState => {
   switch (action.type) {
+    case "SET_TRANSACTIONS":
+      return {
+        ...state,
+        transactions: action.transactions,
+      };
     case "ADD_TRANSACTION":
       return {
         ...state,
-        transactions: [...state.transactions, action.transaction],
+        transactions: [action.transaction, ...state.transactions],
       };
     case "UPDATE_TRANSACTION":
       return {
@@ -101,6 +118,11 @@ const financeReducer = (state: FinanceState, action: FinanceAction): FinanceStat
       return {
         ...state,
         transactions: state.transactions.filter((t) => t.id !== action.id),
+      };
+    case "SET_BUDGETS":
+      return {
+        ...state,
+        budgets: action.budgets,
       };
     case "ADD_BUDGET":
       return {
@@ -119,6 +141,11 @@ const financeReducer = (state: FinanceState, action: FinanceAction): FinanceStat
         ...state,
         budgets: state.budgets.filter((b) => b.id !== action.id),
       };
+    case "SET_GOALS":
+      return {
+        ...state,
+        goals: action.goals,
+      };
     case "ADD_GOAL":
       return {
         ...state,
@@ -135,6 +162,11 @@ const financeReducer = (state: FinanceState, action: FinanceAction): FinanceStat
       return {
         ...state,
         goals: state.goals.filter((g) => g.id !== action.id),
+      };
+    case "SET_DEBTS":
+      return {
+        ...state,
+        debts: action.debts,
       };
     case "ADD_DEBT":
       return {
@@ -153,8 +185,16 @@ const financeReducer = (state: FinanceState, action: FinanceAction): FinanceStat
         ...state,
         debts: state.debts.filter((d) => d.id !== action.id),
       };
-    case "SET_STATE":
-      return action.state;
+    case "SET_LOADING":
+      return {
+        ...state,
+        loading: action.loading,
+      };
+    case "SET_ERROR":
+      return {
+        ...state,
+        error: action.error,
+      };
     default:
       return state;
   }
@@ -164,9 +204,10 @@ const financeReducer = (state: FinanceState, action: FinanceAction): FinanceStat
 interface FinanceContextType {
   state: FinanceState;
   dispatch: React.Dispatch<FinanceAction>;
-  addTransaction: (transaction: Omit<Transaction, "id">) => void;
-  updateTransaction: (transaction: Transaction) => void;
-  deleteTransaction: (id: string) => void;
+  fetchTransactions: () => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, "id">) => Promise<void>;
+  updateTransaction: (transaction: Transaction) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
   addBudget: (budget: Omit<Budget, "id" | "spent">) => void;
   updateBudget: (budget: Budget) => void;
   deleteBudget: (id: string) => void;
@@ -184,129 +225,60 @@ interface FinanceContextType {
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
-// Sample data for testing
-const createSampleData = (): FinanceState => {
-  return {
-    transactions: [
-      {
-        id: "1",
-        amount: 250000,
-        description: "Salário",
-        category: "income",
-        date: new Date(2023, 7, 1).toISOString(),
-        isExpense: false,
-      },
-      {
-        id: "2",
-        amount: 40000,
-        description: "Supermercado",
-        category: "food",
-        date: new Date(2023, 7, 5).toISOString(),
-        isExpense: true,
-      },
-      {
-        id: "3",
-        amount: 15000,
-        description: "Transporte",
-        category: "transportation",
-        date: new Date(2023, 7, 8).toISOString(),
-        isExpense: true,
-      },
-      {
-        id: "4",
-        amount: 60000,
-        description: "Aluguel",
-        category: "housing",
-        date: new Date(2023, 7, 10).toISOString(),
-        isExpense: true,
-      },
-      {
-        id: "5",
-        amount: 25000,
-        description: "Freelance",
-        category: "income",
-        date: new Date(2023, 7, 15).toISOString(),
-        isExpense: false,
-      },
-    ],
-    budgets: [
-      {
-        id: "1",
-        category: "food",
-        amount: 50000,
-        spent: 40000,
-        period: "monthly",
-      },
-      {
-        id: "2",
-        category: "transportation",
-        amount: 25000,
-        spent: 15000,
-        period: "monthly",
-      },
-      {
-        id: "3",
-        category: "housing",
-        amount: 60000,
-        spent: 60000,
-        period: "monthly",
-      },
-    ],
-    goals: [
-      {
-        id: "1",
-        name: "Fundo de emergência",
-        targetAmount: 150000,
-        currentAmount: 50000,
-        targetDate: new Date(2023, 11, 31).toISOString(),
-      },
-      {
-        id: "2",
-        name: "Férias",
-        targetAmount: 100000,
-        currentAmount: 30000,
-        targetDate: new Date(2024, 5, 30).toISOString(),
-      },
-    ],
-    debts: [
-      {
-        id: "1",
-        name: "Empréstimo Pessoal",
-        amount: 200000,
-        interestRate: 15,
-        minimumPayment: 20000,
-        remainingPayments: 10,
-      },
-    ],
-    currency: "Kz",
-  };
-};
-
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(financeReducer, initialState);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  // Load data from localStorage on initial render
-  useEffect(() => {
-    const savedState = localStorage.getItem("financeData");
+  // Fetch user's transactions from Supabase
+  const fetchTransactions = async () => {
+    if (!user) return;
     
-    if (savedState) {
-      try {
-        dispatch({ type: "SET_STATE", state: JSON.parse(savedState) });
-      } catch (e) {
-        console.error("Error loading saved finance data", e);
-        // If there's an error loading saved data, use sample data
-        dispatch({ type: "SET_STATE", state: createSampleData() });
-      }
-    } else {
-      // If no saved data, use sample data
-      dispatch({ type: "SET_STATE", state: createSampleData() });
+    try {
+      dispatch({ type: "SET_LOADING", loading: true });
+      const transactions = await FinanceService.fetchTransactions();
+      dispatch({ type: "SET_TRANSACTIONS", transactions });
+    } catch (error: any) {
+      console.error("Error fetching transactions:", error);
+      dispatch({ type: "SET_ERROR", error: error.message });
+      toast({
+        title: "Erro ao carregar transações",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      dispatch({ type: "SET_LOADING", loading: false });
     }
-  }, []);
+  };
 
-  // Save to localStorage whenever state changes
+  // Fetch data when user changes
   useEffect(() => {
-    localStorage.setItem("financeData", JSON.stringify(state));
-  }, [state]);
+    if (user) {
+      fetchTransactions();
+    }
+  }, [user]);
+
+  // Setup real-time subscription for transactions
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('public:finance_records')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'finance_records',
+        filter: `created_by=eq.${user.id}`
+      }, () => {
+        // Refetch data when changes occur
+        fetchTransactions();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   // Helper functions
   const getTotalIncome = () => {
@@ -334,34 +306,81 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Action creators
-  const addTransaction = (transaction: Omit<Transaction, "id">) => {
-    const newTransaction = {
-      ...transaction,
-      id: Date.now().toString(),
-    };
-    dispatch({ type: "ADD_TRANSACTION", transaction: newTransaction });
+  const addTransaction = async (transaction: Omit<Transaction, "id">) => {
+    if (!user) return;
     
-    // Update budget spent amount if this is an expense
-    if (transaction.isExpense) {
-      const relevantBudget = state.budgets.find(b => b.category === transaction.category);
-      if (relevantBudget) {
-        const updatedBudget = {
-          ...relevantBudget,
-          spent: relevantBudget.spent + transaction.amount
-        };
-        dispatch({ type: "UPDATE_BUDGET", budget: updatedBudget });
-      }
+    try {
+      dispatch({ type: "SET_LOADING", loading: true });
+      const newTransaction = await FinanceService.createTransaction(transaction, user.id);
+      dispatch({ type: "ADD_TRANSACTION", transaction: newTransaction });
+      
+      toast({
+        title: "Transação adicionada",
+        description: "A transação foi adicionada com sucesso",
+      });
+      
+      // Handle budget update if implementing that feature
+    } catch (error: any) {
+      console.error("Error adding transaction:", error);
+      dispatch({ type: "SET_ERROR", error: error.message });
+      toast({
+        title: "Erro ao adicionar transação",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      dispatch({ type: "SET_LOADING", loading: false });
     }
   };
 
-  const updateTransaction = (transaction: Transaction) => {
-    dispatch({ type: "UPDATE_TRANSACTION", transaction });
+  const updateTransaction = async (transaction: Transaction) => {
+    try {
+      dispatch({ type: "SET_LOADING", loading: true });
+      await FinanceService.updateTransaction(transaction);
+      dispatch({ type: "UPDATE_TRANSACTION", transaction });
+      
+      toast({
+        title: "Transação atualizada",
+        description: "A transação foi atualizada com sucesso",
+      });
+    } catch (error: any) {
+      console.error("Error updating transaction:", error);
+      dispatch({ type: "SET_ERROR", error: error.message });
+      toast({
+        title: "Erro ao atualizar transação",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      dispatch({ type: "SET_LOADING", loading: false });
+    }
   };
 
-  const deleteTransaction = (id: string) => {
-    dispatch({ type: "DELETE_TRANSACTION", id });
+  const deleteTransaction = async (id: string) => {
+    try {
+      dispatch({ type: "SET_LOADING", loading: true });
+      await FinanceService.deleteTransaction(id);
+      dispatch({ type: "DELETE_TRANSACTION", id });
+      
+      toast({
+        title: "Transação excluída",
+        description: "A transação foi excluída com sucesso",
+      });
+    } catch (error: any) {
+      console.error("Error deleting transaction:", error);
+      dispatch({ type: "SET_ERROR", error: error.message });
+      toast({
+        title: "Erro ao excluir transação",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      dispatch({ type: "SET_LOADING", loading: false });
+    }
   };
 
+  // Manter os métodos locais para orçamentos, metas e dívidas até que esses
+  // recursos sejam implementados no Supabase
   const addBudget = (budget: Omit<Budget, "id" | "spent">) => {
     const newBudget = {
       ...budget,
@@ -416,6 +435,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       value={{
         state,
         dispatch,
+        fetchTransactions,
         addTransaction,
         updateTransaction,
         deleteTransaction,
