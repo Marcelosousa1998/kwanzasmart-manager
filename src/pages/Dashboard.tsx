@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   ArrowUpCircle, 
@@ -29,12 +28,10 @@ const Dashboard = () => {
   } = useFinance();
   const [openTransactionDialog, setOpenTransactionDialog] = React.useState(false);
 
-  // Get the last 5 transactions, sorted by date (newest first)
   const recentTransactions = [...state.transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  // Calculate spending by category
   const categorySpending = state.transactions
     .filter(t => t.isExpense)
     .reduce((acc, transaction) => {
@@ -51,7 +48,6 @@ const Dashboard = () => {
     }))
     .sort((a, b) => b.amount - a.amount);
 
-  // Generate income/expense data for the line chart over time
   const getLastSixMonths = () => {
     const result = [];
     const now = new Date();
@@ -86,7 +82,6 @@ const Dashboard = () => {
     };
   });
 
-  // Calculate budget progress
   const budgetProgress = state.budgets.map(budget => {
     const percentUsed = (budget.spent / budget.amount) * 100;
     const isOverBudget = percentUsed > 100;
@@ -111,7 +106,6 @@ const Dashboard = () => {
     <Layout>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* Financial Summary Cards */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
@@ -161,7 +155,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Quick Action Buttons */}
         <div className="flex flex-wrap gap-2">
           <Dialog open={openTransactionDialog} onOpenChange={setOpenTransactionDialog}>
             <DialogTrigger asChild>
@@ -189,9 +182,7 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {/* Main Dashboard Content */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* Left Column */}
           <div className="col-span-2 grid gap-4 lg:col-span-2">
             <Card className="col-span-2">
               <CardHeader>
@@ -260,7 +251,6 @@ const Dashboard = () => {
                 <Progress 
                   value={budgetedVsActualPercentage > 100 ? 100 : budgetedVsActualPercentage} 
                   className={budgetedVsActualPercentage > 100 ? "bg-red-200" : ""}
-                  indicatorClassName={budgetedVsActualPercentage > 100 ? "bg-red-500" : ""}
                 />
                 
                 <div className="space-y-2 mt-4">
@@ -278,7 +268,6 @@ const Dashboard = () => {
                       <Progress 
                         value={budget.percentUsed > 100 ? 100 : budget.percentUsed} 
                         className={budget.isOverBudget ? "bg-red-200" : ""}
-                        indicatorClassName={budget.isOverBudget ? "bg-red-500" : ""}
                       />
                     </div>
                   ))}
@@ -295,7 +284,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Right Column */}
           <div className="col-span-2 grid gap-4 lg:col-span-1">
             <Tabs defaultValue="recent" className="col-span-2 lg:col-span-1">
               <TabsList className="grid w-full grid-cols-2">

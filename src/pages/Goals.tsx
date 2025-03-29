@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Calendar, PlusCircle, Target, Trash2 } from "lucide-react";
+import { Calendar, PlusCircle, Target, Trash2, Check } from "lucide-react";
 import { useFinance } from "@/contexts/FinanceContext";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";

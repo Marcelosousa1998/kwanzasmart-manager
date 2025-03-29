@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Check, PlusCircle, Trash2, X } from "lucide-react";
 import { useFinance, TransactionCategory } from "@/contexts/FinanceContext";
@@ -13,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Radio, RadioGroup } from "@/components/ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
@@ -167,11 +166,11 @@ const Budgets = () => {
                       className="flex space-x-4"
                     >
                       <div className="flex items-center space-x-2">
-                        <Radio value="monthly" id="monthly" />
+                        <RadioGroupItem value="monthly" id="monthly" />
                         <Label htmlFor="monthly">Mensal</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Radio value="weekly" id="weekly" />
+                        <RadioGroupItem value="weekly" id="weekly" />
                         <Label htmlFor="weekly">Semanal</Label>
                       </div>
                     </RadioGroup>
@@ -292,7 +291,6 @@ const Budgets = () => {
                               <Progress 
                                 value={percentUsed > 100 ? 100 : percentUsed} 
                                 className={`h-2 w-full ${isOverBudget ? 'bg-red-200' : ''}`}
-                                indicatorClassName={isOverBudget ? 'bg-red-500' : ''}
                               />
                               <span className="ml-2 text-xs font-medium">
                                 {Math.round(percentUsed)}%
@@ -339,7 +337,7 @@ const Budgets = () => {
                   <div className="w-3 h-3 rounded-full bg-blue-500" />
                   <span className="font-medium">60% - Necessidades</span>
                 </div>
-                <Progress value={60} className="w-32 h-2" indicatorClassName="bg-blue-500" />
+                <Progress value={60} className="w-32 h-2" />
               </div>
               <p className="text-xs text-muted-foreground pl-5">
                 Despesas essenciais como aluguel, alimentação, transporte, educação básica
@@ -352,7 +350,7 @@ const Budgets = () => {
                   <div className="w-3 h-3 rounded-full bg-purple-500" />
                   <span className="font-medium">20% - Desejos</span>
                 </div>
-                <Progress value={20} className="w-32 h-2" indicatorClassName="bg-purple-500" />
+                <Progress value={20} className="w-32 h-2" />
               </div>
               <p className="text-xs text-muted-foreground pl-5">
                 Gastos não essenciais como entretenimento, jantar fora, compras
@@ -365,7 +363,7 @@ const Budgets = () => {
                   <div className="w-3 h-3 rounded-full bg-green-500" />
                   <span className="font-medium">20% - Poupança e Dívidas</span>
                 </div>
-                <Progress value={20} className="w-32 h-2" indicatorClassName="bg-green-500" />
+                <Progress value={20} className="w-32 h-2" />
               </div>
               <p className="text-xs text-muted-foreground pl-5">
                 Poupança para emergências, metas futuras e pagamento de dívidas
