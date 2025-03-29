@@ -16,16 +16,15 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+// Criando o cliente de consulta fora do componente
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <FinanceProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <FinanceProvider>
+          <TooltipProvider>
             <Routes>
               {/* Rotas de autenticação */}
               <Route path="/login" element={<Login />} />
@@ -76,10 +75,12 @@ const App = () => (
               {/* Rota 404 */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </FinanceProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </FinanceProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
