@@ -138,8 +138,8 @@ const Transactions = () => {
             </div>
             
             <Select
-              value={selectedCategory || ""}
-              onValueChange={(value) => setSelectedCategory(value || null)}
+              value={selectedCategory || "all"}
+              onValueChange={(value) => setSelectedCategory(value === "all" ? null : value)}
             >
               <SelectTrigger className="h-9">
                 <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ const Transactions = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="">Todas as categorias</SelectItem>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
                   <SelectLabel>Categorias</SelectLabel>
                   {allCategories.map((category) => (
                     <SelectItem key={category} value={category}>
