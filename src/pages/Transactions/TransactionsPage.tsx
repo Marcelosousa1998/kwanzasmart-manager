@@ -6,6 +6,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import TransactionsList from "./components/TransactionsList";
 import TransactionFilters from "./components/TransactionFilters";
 import AddTransactionDialog from "./components/AddTransactionDialog";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 const TransactionsPage = () => {
   const { deleteTransaction, fetchTransactions } = useFinance();
@@ -13,7 +15,7 @@ const TransactionsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
 
-  // Buscar transações quando a página for carregada
+  // Fetch transactions when the page is loaded
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
@@ -35,6 +37,10 @@ const TransactionsPage = () => {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold tracking-tight">Transações</h1>
+          <Button onClick={() => setOpenAddDialog(true)} className="flex items-center gap-2">
+            <PlusCircle className="h-4 w-4" />
+            Nova Transação
+          </Button>
           <AddTransactionDialog 
             open={openAddDialog} 
             onOpenChange={setOpenAddDialog} 

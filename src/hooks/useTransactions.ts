@@ -45,8 +45,6 @@ export const useTransactions = (
         title: "Transação adicionada",
         description: "A transação foi adicionada com sucesso",
       });
-      
-      // Handle budget update if implementing that feature
     } catch (error: any) {
       console.error("Error adding transaction:", error);
       dispatch({ type: "SET_ERROR", error: error.message });
