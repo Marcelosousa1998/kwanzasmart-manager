@@ -1,7 +1,6 @@
+
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import * as FinanceService from "@/services/FinanceService";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { financeReducer, initialState } from "@/reducers/financeReducer";
 import { 
@@ -19,6 +18,10 @@ import {
   getBalance, 
   formatCurrency 
 } from "@/utils/financeUtils";
+import { useTransactions } from "@/hooks/useTransactions";
+import { useBudgets } from "@/hooks/useBudgets";
+import { useGoals } from "@/hooks/useGoals";
+import { useDebts } from "@/hooks/useDebts";
 
 // Create context
 interface FinanceContextType {
@@ -48,33 +51,17 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(financeReducer, initialState);
   const { user } = useAuth();
-  const { toast } = useToast();
 
-  // Fetch user's transactions from Supabase
-  const fetchTransactions = async () => {
-    if (!user) return;
-    
-    try {
-      dispatch({ type: "SET_LOADING", loading: true });
-      const transactions = await FinanceService.fetchTransactions();
-      dispatch({ type: "SET_TRANSACTIONS", transactions });
-    } catch (error: any) {
-      console.error("Error fetching transactions:", error);
-      dispatch({ type: "SET_ERROR", error: error.message });
-      toast({
-        title: "Erro ao carregar transações",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      dispatch({ type: "SET_LOADING", loading: false });
-    }
-  };
+  // Initialize hooks
+  const transactions = useTransactions(dispatch, user?.id);
+  const budgets = useBudgets(dispatch);
+  const goals = useGoals(dispatch);
+  const debts = useDebts(dispatch);
 
   // Fetch data when user changes
   useEffect(() => {
     if (user) {
-      fetchTransactions();
+      transactions.fetchTransactions();
     }
   }, [user]);
 
@@ -91,7 +78,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         filter: `created_by=eq.${user.id}`
       }, () => {
         // Refetch data when changes occur
-        fetchTransactions();
+        transactions.fetchTransactions();
       })
       .subscribe();
 
@@ -100,149 +87,24 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, [user]);
 
-  // Action creators
-  const addTransaction = async (transaction: Omit<Transaction, "id">) => {
-    if (!user) return;
-    
-    try {
-      dispatch({ type: "SET_LOADING", loading: true });
-      const newTransaction = await FinanceService.createTransaction(transaction, user.id);
-      dispatch({ type: "ADD_TRANSACTION", transaction: newTransaction });
-      
-      toast({
-        title: "Transação adicionada",
-        description: "A transação foi adicionada com sucesso",
-      });
-      
-      // Handle budget update if implementing that feature
-    } catch (error: any) {
-      console.error("Error adding transaction:", error);
-      dispatch({ type: "SET_ERROR", error: error.message });
-      toast({
-        title: "Erro ao adicionar transação",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      dispatch({ type: "SET_LOADING", loading: false });
-    }
-  };
-
-  const updateTransaction = async (transaction: Transaction) => {
-    try {
-      dispatch({ type: "SET_LOADING", loading: true });
-      await FinanceService.updateTransaction(transaction);
-      dispatch({ type: "UPDATE_TRANSACTION", transaction });
-      
-      toast({
-        title: "Transação atualizada",
-        description: "A transação foi atualizada com sucesso",
-      });
-    } catch (error: any) {
-      console.error("Error updating transaction:", error);
-      dispatch({ type: "SET_ERROR", error: error.message });
-      toast({
-        title: "Erro ao atualizar transação",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      dispatch({ type: "SET_LOADING", loading: false });
-    }
-  };
-
-  const deleteTransaction = async (id: string) => {
-    try {
-      dispatch({ type: "SET_LOADING", loading: true });
-      await FinanceService.deleteTransaction(id);
-      dispatch({ type: "DELETE_TRANSACTION", id });
-      
-      toast({
-        title: "Transação excluída",
-        description: "A transação foi excluída com sucesso",
-      });
-    } catch (error: any) {
-      console.error("Error deleting transaction:", error);
-      dispatch({ type: "SET_ERROR", error: error.message });
-      toast({
-        title: "Erro ao excluir transação",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      dispatch({ type: "SET_LOADING", loading: false });
-    }
-  };
-
-  // Manter os métodos locais para orçamentos, metas e dívidas até que esses
-  // recursos sejam implementados no Supabase
-  const addBudget = (budget: Omit<Budget, "id" | "spent">) => {
-    const newBudget = {
-      ...budget,
-      id: Date.now().toString(),
-      spent: 0,
-    };
-    dispatch({ type: "ADD_BUDGET", budget: newBudget });
-  };
-
-  const updateBudget = (budget: Budget) => {
-    dispatch({ type: "UPDATE_BUDGET", budget });
-  };
-
-  const deleteBudget = (id: string) => {
-    dispatch({ type: "DELETE_BUDGET", id });
-  };
-
-  const addGoal = (goal: Omit<Goal, "id">) => {
-    const newGoal = {
-      ...goal,
-      id: Date.now().toString(),
-    };
-    dispatch({ type: "ADD_GOAL", goal: newGoal });
-  };
-
-  const updateGoal = (goal: Goal) => {
-    dispatch({ type: "UPDATE_GOAL", goal });
-  };
-
-  const deleteGoal = (id: string) => {
-    dispatch({ type: "DELETE_GOAL", id });
-  };
-
-  const addDebt = (debt: Omit<Debt, "id">) => {
-    const newDebt = {
-      ...debt,
-      id: Date.now().toString(),
-    };
-    dispatch({ type: "ADD_DEBT", debt: newDebt });
-  };
-
-  const updateDebt = (debt: Debt) => {
-    dispatch({ type: "UPDATE_DEBT", debt });
-  };
-
-  const deleteDebt = (id: string) => {
-    dispatch({ type: "DELETE_DEBT", id });
-  };
-
   return (
     <FinanceContext.Provider
       value={{
         state,
         dispatch,
-        fetchTransactions,
-        addTransaction,
-        updateTransaction,
-        deleteTransaction,
-        addBudget,
-        updateBudget,
-        deleteBudget,
-        addGoal,
-        updateGoal,
-        deleteGoal,
-        addDebt,
-        updateDebt,
-        deleteDebt,
+        fetchTransactions: transactions.fetchTransactions,
+        addTransaction: transactions.addTransaction,
+        updateTransaction: transactions.updateTransaction,
+        deleteTransaction: transactions.deleteTransaction,
+        addBudget: budgets.addBudget,
+        updateBudget: budgets.updateBudget,
+        deleteBudget: budgets.deleteBudget,
+        addGoal: goals.addGoal,
+        updateGoal: goals.updateGoal,
+        deleteGoal: goals.deleteGoal,
+        addDebt: debts.addDebt,
+        updateDebt: debts.updateDebt,
+        deleteDebt: debts.deleteDebt,
         getTotalIncome: () => getTotalIncome(state.transactions),
         getTotalExpenses: () => getTotalExpenses(state.transactions),
         getBalance: () => getBalance(state.transactions),
