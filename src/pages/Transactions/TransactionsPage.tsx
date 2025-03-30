@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFinance } from "@/contexts/FinanceContext";
 import Layout from "@/components/Layout";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -8,10 +8,15 @@ import TransactionFilters from "./components/TransactionFilters";
 import AddTransactionDialog from "./components/AddTransactionDialog";
 
 const TransactionsPage = () => {
-  const { deleteTransaction } = useFinance();
+  const { deleteTransaction, fetchTransactions } = useFinance();
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+
+  // Buscar transações quando a página for carregada
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const handleConfirmDelete = (id: string) => {
     setTransactionToDelete(id);
