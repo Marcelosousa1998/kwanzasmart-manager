@@ -1,30 +1,48 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import Layout from "@/components/Layout";
-import { useFinance } from "@/contexts/FinanceContext";
 import GoalsList from "./components/GoalsList";
 import AddGoalDialog from "./components/AddGoalDialog";
 import TipsCard from "./components/TipsCard";
 import GoalsWrapper from "./components/GoalsWrapper";
+import { useFinance } from "@/contexts/FinanceContext";
 
 const GoalsPage = () => {
-  const { state } = useFinance();
+  const { fetchTransactions, state } = useFinance();
+
+  // Buscar os dados sempre que a página for carregada
+  useEffect(() => {
+    // Buscar transações se ainda não foram carregadas
+    if (state.transactions.length === 0) {
+      fetchTransactions();
+    }
+  }, [fetchTransactions, state.transactions.length]);
 
   return (
     <Layout>
-      <GoalsWrapper>
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h1 className="text-2xl font-bold tracking-tight">Metas de Poupança</h1>
-            <AddGoalDialog />
-          </div>
-
-          <GoalsList goals={state.goals} />
-          <TipsCard />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Metas Financeiras</h1>
+          <AddGoalDialog />
         </div>
-      </GoalsWrapper>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <GoalsList />
+          </div>
+          <div className="lg:col-span-1">
+            <TipsCard />
+          </div>
+        </div>
+      </div>
     </Layout>
   );
 };
 
-export default GoalsPage;
+const WrappedGoalsPage = () => (
+  <GoalsWrapper>
+    <GoalsPage />
+  </GoalsWrapper>
+);
+
+export default WrappedGoalsPage;
