@@ -24,6 +24,11 @@ export const fetchTransactions = async () => {
 };
 
 export const createTransaction = async (transaction: Omit<Transaction, "id">, userId: string) => {
+  // Make sure the user ID is included in the request
+  if (!userId) {
+    throw new Error("User ID is required to create a transaction");
+  }
+
   const { data, error } = await supabase
     .from('finance_records')
     .insert([{
@@ -38,6 +43,7 @@ export const createTransaction = async (transaction: Omit<Transaction, "id">, us
     .single();
   
   if (error) {
+    console.error("Supabase error:", error);
     throw error;
   }
   

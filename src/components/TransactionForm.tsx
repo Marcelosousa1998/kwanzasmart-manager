@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useFinance } from "@/contexts/FinanceContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { TransactionCategory } from "@/types/finance";
 import { getCategoryLabel, expenseCategories } from "@/utils/categoryUtils";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface TransactionFormProps {
 
 const TransactionForm: React.FC<TransactionFormProps> = ({ onSuccess }) => {
   const { addTransaction, formatCurrency } = useFinance();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<"income" | "expense">("expense");
   const [amount, setAmount] = useState("");
@@ -25,6 +27,15 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSuccess }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para registrar uma transação",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!amount || parseFloat(amount) <= 0) {
       toast({
@@ -52,6 +63,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSuccess }) => {
       isExpense: transactionType === "expense",
     };
 
+    console.log("Submitting transaction:", transaction);
     addTransaction(transaction);
     
     toast({

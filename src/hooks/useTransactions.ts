@@ -13,7 +13,15 @@ export const useTransactions = (
 
   // Fetch user's transactions from Supabase
   const fetchTransactions = async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.error("No user ID available");
+      toast({
+        title: "Erro ao carregar transações",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       dispatch({ type: "SET_LOADING", loading: true });
@@ -34,11 +42,23 @@ export const useTransactions = (
 
   // Action creators
   const addTransaction = async (transaction: Omit<Transaction, "id">) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error("No user ID available");
+      toast({
+        title: "Erro ao adicionar transação",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
+      setIsLoading(true);
       dispatch({ type: "SET_LOADING", loading: true });
+      
+      console.log("Adding transaction with userId:", userId);
       const newTransaction = await FinanceService.createTransaction(transaction, userId);
+      
       dispatch({ type: "ADD_TRANSACTION", transaction: newTransaction });
       
       toast({
@@ -54,12 +74,14 @@ export const useTransactions = (
         variant: "destructive",
       });
     } finally {
+      setIsLoading(false);
       dispatch({ type: "SET_LOADING", loading: false });
     }
   };
 
   const updateTransaction = async (transaction: Transaction) => {
     try {
+      setIsLoading(true);
       dispatch({ type: "SET_LOADING", loading: true });
       await FinanceService.updateTransaction(transaction);
       dispatch({ type: "UPDATE_TRANSACTION", transaction });
@@ -77,12 +99,14 @@ export const useTransactions = (
         variant: "destructive",
       });
     } finally {
+      setIsLoading(false);
       dispatch({ type: "SET_LOADING", loading: false });
     }
   };
 
   const deleteTransaction = async (id: string) => {
     try {
+      setIsLoading(true);
       dispatch({ type: "SET_LOADING", loading: true });
       await FinanceService.deleteTransaction(id);
       dispatch({ type: "DELETE_TRANSACTION", id });
@@ -100,6 +124,7 @@ export const useTransactions = (
         variant: "destructive",
       });
     } finally {
+      setIsLoading(false);
       dispatch({ type: "SET_LOADING", loading: false });
     }
   };

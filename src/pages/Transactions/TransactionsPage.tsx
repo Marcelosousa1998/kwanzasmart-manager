@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useFinance } from "@/contexts/FinanceContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import TransactionsList from "./components/TransactionsList";
@@ -10,13 +11,15 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
 const TransactionsPage = () => {
-  const { deleteTransaction, fetchTransactions } = useFinance();
+  const { user } = useAuth();
+  const { deleteTransaction, fetchTransactions, state } = useFinance();
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
 
   // Fetch transactions when the page is loaded
   useEffect(() => {
+    console.log("TransactionsPage mounted, fetching transactions");
     fetchTransactions();
   }, [fetchTransactions]);
 
