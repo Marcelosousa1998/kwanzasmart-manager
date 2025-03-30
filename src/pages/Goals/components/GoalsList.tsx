@@ -8,12 +8,10 @@ import GoalCard from "./GoalCard";
 import { useFinance } from "@/contexts/FinanceContext";
 import { useGoalDialogs } from "../hooks/useGoalDialogs";
 
-interface GoalsListProps {
-  goals: Goal[];
-}
-
-const GoalsList = ({ goals }: GoalsListProps) => {
+const GoalsList = () => {
+  const { state } = useFinance();
   const { setOpenAddDialog } = useGoalDialogs();
+  const goals = state.goals;
 
   if (goals.length === 0) {
     return (
