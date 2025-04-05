@@ -23,62 +23,78 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <AuthProvider>
-        <FinanceProvider>
-          <TooltipProvider>
-            <Routes>
-              {/* Rotas de autenticação */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+        <Routes>
+          {/* Rotas de autenticação - outside of FinanceProvider since they don't need financial data */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-              {/* Rotas protegidas */}
-              <Route 
-                path="/" 
-                element={
-                  <ProtectedRoute>
+          {/* Rotas protegidas - wrapped in FinanceProvider */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <FinanceProvider>
+                  <TooltipProvider>
                     <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/transactions" 
-                element={
-                  <ProtectedRoute>
+                  </TooltipProvider>
+                </FinanceProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute>
+                <FinanceProvider>
+                  <TooltipProvider>
                     <Transactions />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/budgets" 
-                element={
-                  <ProtectedRoute>
+                  </TooltipProvider>
+                </FinanceProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/budgets"
+            element={
+              <ProtectedRoute>
+                <FinanceProvider>
+                  <TooltipProvider>
                     <Budgets />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/goals" 
-                element={
-                  <ProtectedRoute>
+                  </TooltipProvider>
+                </FinanceProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/goals"
+            element={
+              <ProtectedRoute>
+                <FinanceProvider>
+                  <TooltipProvider>
                     <Goals />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/debts" 
-                element={
-                  <ProtectedRoute>
+                  </TooltipProvider>
+                </FinanceProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/debts"
+            element={
+              <ProtectedRoute>
+                <FinanceProvider>
+                  <TooltipProvider>
                     <Debts />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Rota 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </FinanceProvider>
+                  </TooltipProvider>
+                </FinanceProvider>
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Rota 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+        <Sonner />
       </AuthProvider>
     </BrowserRouter>
   </QueryClientProvider>
