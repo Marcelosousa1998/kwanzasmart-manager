@@ -10,9 +10,9 @@ import { useFinance } from "@/contexts/FinanceContext";
 const GoalsPage = () => {
   const { fetchTransactions, state } = useFinance();
 
-  // Buscar os dados sempre que a página for carregada
+  // Fetch data when the page loads
   useEffect(() => {
-    // Buscar transações se ainda não foram carregadas
+    // Fetch transactions if they haven't been loaded yet
     if (state.transactions.length === 0) {
       fetchTransactions();
     }
