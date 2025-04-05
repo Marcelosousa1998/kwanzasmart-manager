@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Check, PlusCircle, Trash2, X } from "lucide-react";
 import { useFinance, TransactionCategory } from "@/contexts/FinanceContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import CategoryIcon from "@/components/CategoryIcon";
 import { getCategoryLabel, expenseCategories } from "@/utils/categoryUtils";
@@ -15,9 +17,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Budgets = () => {
-  const { state, addBudget, deleteBudget, formatCurrency } = useFinance();
+  const { state, addBudget, deleteBudget, formatCurrency, isLoading, fetchTransactions } = useFinance();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [category, setCategory] = useState<TransactionCategory>("food");
@@ -25,6 +29,35 @@ const Budgets = () => {
   const [period, setPeriod] = useState<"monthly" | "weekly">("monthly");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [budgetToDelete, setBudgetToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchTransactions();
+    }
+  }, [user, fetchTransactions]);
+
+  // If loading, show skeleton UI
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-[160px]" />
+            <Skeleton className="h-10 w-[150px] rounded-md" />
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-3">
+            <Skeleton className="h-[120px] rounded-lg" />
+            <Skeleton className="h-[120px] rounded-lg" />
+            <Skeleton className="h-[120px] rounded-lg" />
+          </div>
+          
+          <Skeleton className="h-[350px] w-full rounded-lg" />
+          <Skeleton className="h-[250px] w-full rounded-lg" />
+        </div>
+      </Layout>
+    );
+  }
 
   // Calculate total budgeted amount
   const totalBudgeted = state.budgets.reduce((total, budget) => total + budget.amount, 0);
@@ -45,6 +78,15 @@ const Budgets = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar um orçamento",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!amount || parseFloat(amount) <= 0) {
       toast({
@@ -177,7 +219,7 @@ const Budgets = () => {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={unbudgetedCategories.length === 0}>
+                  <Button type="submit" disabled={!user || unbudgetedCategories.length === 0}>
                     Criar Orçamento
                   </Button>
                 </DialogFooter>

@@ -81,6 +81,15 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onSuccess }) => {
     }
   };
 
+  // If user not logged in, show login requirement
+  if (!user) {
+    return (
+      <div className="p-4 border border-orange-200 bg-orange-50 rounded-md text-orange-700">
+        <p>Você precisa estar logado para registrar transações.</p>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Tabs 

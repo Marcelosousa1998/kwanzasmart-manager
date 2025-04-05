@@ -25,7 +25,8 @@ export const useTransactions = (
     
     try {
       dispatch({ type: "SET_LOADING", loading: true });
-      const transactions = await FinanceService.fetchTransactions();
+      console.log("Fetching transactions for user:", userId);
+      const transactions = await FinanceService.fetchTransactions(userId);
       dispatch({ type: "SET_TRANSACTIONS", transactions });
     } catch (error: any) {
       console.error("Error fetching transactions:", error);
@@ -80,10 +81,20 @@ export const useTransactions = (
   };
 
   const updateTransaction = async (transaction: Transaction) => {
+    if (!userId) {
+      console.error("No user ID available");
+      toast({
+        title: "Erro ao atualizar transação",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       dispatch({ type: "SET_LOADING", loading: true });
-      await FinanceService.updateTransaction(transaction);
+      await FinanceService.updateTransaction(transaction, userId);
       dispatch({ type: "UPDATE_TRANSACTION", transaction });
       
       toast({
@@ -105,10 +116,20 @@ export const useTransactions = (
   };
 
   const deleteTransaction = async (id: string) => {
+    if (!userId) {
+      console.error("No user ID available");
+      toast({
+        title: "Erro ao excluir transação",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       dispatch({ type: "SET_LOADING", loading: true });
-      await FinanceService.deleteTransaction(id);
+      await FinanceService.deleteTransaction(id, userId);
       dispatch({ type: "DELETE_TRANSACTION", id });
       
       toast({

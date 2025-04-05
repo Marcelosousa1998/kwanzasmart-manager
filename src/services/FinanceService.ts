@@ -3,13 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Transaction, TransactionCategory } from "@/types/finance";
 
 // Funções para transações
-export const fetchTransactions = async () => {
+export const fetchTransactions = async (userId: string) => {
+  if (!userId) {
+    throw new Error("User ID is required to fetch transactions");
+  }
+
   const { data, error } = await supabase
     .from('finance_records')
     .select('*')
+    .eq('created_by', userId)
     .order('date', { ascending: false });
   
   if (error) {
+    console.error("Error fetching transactions:", error);
     throw error;
   }
   
@@ -28,6 +34,8 @@ export const createTransaction = async (transaction: Omit<Transaction, "id">, us
   if (!userId) {
     throw new Error("User ID is required to create a transaction");
   }
+
+  console.log("Creating transaction with userId:", userId);
 
   const { data, error } = await supabase
     .from('finance_records')
@@ -57,7 +65,11 @@ export const createTransaction = async (transaction: Omit<Transaction, "id">, us
   };
 };
 
-export const updateTransaction = async (transaction: Transaction) => {
+export const updateTransaction = async (transaction: Transaction, userId: string) => {
+  if (!userId) {
+    throw new Error("User ID is required to update a transaction");
+  }
+
   const { error } = await supabase
     .from('finance_records')
     .update({
@@ -67,7 +79,8 @@ export const updateTransaction = async (transaction: Transaction) => {
       date: transaction.date,
       type: transaction.isExpense ? 'expense' : 'income',
     })
-    .eq('id', transaction.id);
+    .eq('id', transaction.id)
+    .eq('created_by', userId);
   
   if (error) {
     throw error;
@@ -76,11 +89,16 @@ export const updateTransaction = async (transaction: Transaction) => {
   return transaction;
 };
 
-export const deleteTransaction = async (id: string) => {
+export const deleteTransaction = async (id: string, userId: string) => {
+  if (!userId) {
+    throw new Error("User ID is required to delete a transaction");
+  }
+
   const { error } = await supabase
     .from('finance_records')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('created_by', userId);
   
   if (error) {
     throw error;

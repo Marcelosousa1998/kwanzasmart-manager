@@ -44,6 +44,7 @@ interface FinanceContextType {
   getTotalExpenses: () => number;
   getBalance: () => number;
   formatCurrency: (amount: number) => string;
+  isLoading: boolean;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -51,6 +52,9 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(financeReducer, initialState);
   const { user } = useAuth();
+  
+  // Show loading status from transactions hook
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Initialize hooks
   const transactions = useTransactions(dispatch, user?.id);
@@ -61,7 +65,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Fetch data when user changes
   useEffect(() => {
     if (user) {
-      transactions.fetchTransactions();
+      setIsLoading(true);
+      transactions.fetchTransactions().finally(() => {
+        setIsLoading(false);
+      });
     }
   }, [user]);
 
@@ -109,6 +116,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         getTotalExpenses: () => getTotalExpenses(state.transactions),
         getBalance: () => getBalance(state.transactions),
         formatCurrency,
+        isLoading: isLoading || transactions.isLoading,
       }}
     >
       {children}

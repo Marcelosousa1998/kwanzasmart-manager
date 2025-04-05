@@ -1,10 +1,12 @@
 
 import { useState } from "react";
 import { useFinance } from "@/contexts/FinanceContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 export const useAddGoal = (onSuccess: () => void) => {
   const { addGoal, formatCurrency } = useFinance();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -13,6 +15,15 @@ export const useAddGoal = (onSuccess: () => void) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar uma meta",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!name) {
       toast({
@@ -83,6 +94,7 @@ export const useAddGoal = (onSuccess: () => void) => {
     setCurrentAmount,
     targetDate,
     setTargetDate,
-    handleSubmit
+    handleSubmit,
+    isAuthenticated: !!user
   };
 };
