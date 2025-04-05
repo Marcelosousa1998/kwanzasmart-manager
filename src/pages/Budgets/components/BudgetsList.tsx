@@ -13,7 +13,7 @@ interface BudgetsListProps {
 }
 
 const BudgetsList = ({ onDeleteBudget }: BudgetsListProps) => {
-  const { state, formatCurrency, addBudget } = useFinance();
+  const { state, formatCurrency } = useFinance();
   
   return (
     <Card>

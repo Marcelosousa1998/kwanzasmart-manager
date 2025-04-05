@@ -84,12 +84,6 @@ const AddBudgetDialog = ({ open, onOpenChange }: AddBudgetDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button id="add-budget-trigger" className="flex items-center gap-2">
-          <PlusCircle className="h-4 w-4" />
-          Novo Orçamento
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
