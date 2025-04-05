@@ -6,6 +6,10 @@ export const useBudgetDialogs = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [budgetToDelete, setBudgetToDelete] = useState<string | null>(null);
 
+  const handleOpenAddDialog = () => {
+    setOpenAddDialog(true);
+  };
+
   const handleConfirmDelete = (id: string) => {
     setBudgetToDelete(id);
     setDeleteDialogOpen(true);
@@ -18,6 +22,7 @@ export const useBudgetDialogs = () => {
     setDeleteDialogOpen,
     budgetToDelete,
     setBudgetToDelete,
+    handleOpenAddDialog,
     handleConfirmDelete,
   };
 };
